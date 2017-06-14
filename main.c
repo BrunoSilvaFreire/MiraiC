@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define TOTAL_COMMANDS 8
 #define COMMAND_LIST_HEADER "--------------------------------\n"
@@ -152,9 +153,9 @@ void executeCommand(int cmd) {
 int main() {
     printf("Ola, eu sou a mirai! Eu sou um robo feito para facilitar a sua vida :D\n");
     printf("Eu venho com varios comandos de utilidade que voce pode utilizar, entre eles:\n");
-    printAvailableCommands();
     printf("Digite o numero de um comando para a execucao! :)\n");
     while (true) {
+        printAvailableCommands();
         int cmd;
         scanf("%d", &cmd);
         if (cmd == 0) {
