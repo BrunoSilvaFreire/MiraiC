@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define TOTAL_COMMANDS 8
 #define COMMAND_LIST_HEADER "--------------------------------\n"
@@ -12,6 +13,42 @@
 #define PRICE_OF_FILLING_AREA_COMMAND "precoPreenchimentoMaterialArea"
 #define PRICE_OF_FILLING_VOLUME_COMMAND "precoPreenchimentoMaterialVolume"
 #define CHILL_COMMAND "desestressar"
+
+
+struct actionArgument {
+	char * chars;
+	int length;
+} typedef ActionArgument;
+
+struct action {
+	long long timestamp;
+	ActionArgument arguments[];	
+} typedef Action;
+
+Action currentAction;
+
+long long getCurrentTimestamp() {
+    struct timeval te; 
+    gettimeofday(&te, NULL); // get current time
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+    // printf("milliseconds: %lld\n", milliseconds);
+    return milliseconds;
+}
+
+Action createNewAction() {
+	Action action = *((Action *) malloc(sizeof(Action)));
+	action.timestamp = getCurrentTimestamp();
+	return action;
+}
+
+void startNewAction() {
+	currentAction = createNewAction();
+}
+
+
+void finishAction() {
+	//TODO: save everything
+}
 
 char *AVAILABLE_COMMANDS[TOTAL_COMMANDS] = {
         QUIT_COMMAND,
@@ -58,7 +95,8 @@ float volumeOfSquare(float height, float width, float length) {
 
 void printAvailableCommands() {
     printf(COMMAND_LIST_HEADER);
-    for (int i = 0; i < TOTAL_COMMANDS; ++i) {
+    int i;
+    for (i = 0; i < TOTAL_COMMANDS; ++i) {
         char *command = AVAILABLE_COMMANDS[i];
         char *description = COMMANDS_DESCRIPTIONS[i];
         printf("%d - %s: %s\n", i, command, description);
@@ -156,12 +194,14 @@ int main() {
     printf("Digite o numero de um comando para a execucao! :)\n");
     while (true) {
         printAvailableCommands();
+        startNewAction();
         int cmd;
         scanf("%d", &cmd);
         if (cmd == 0) {
             break;
         }
         executeCommand(cmd);
+        finishAction();
     }
     printf("Sayounara ^_^\n");
     return 0;

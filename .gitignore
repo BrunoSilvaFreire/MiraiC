@@ -25,6 +25,7 @@
 *.pdb
 *.mod*
 *.cmd
+*.exe
 modules.order
 Module.symvers
 Mkfile.old
