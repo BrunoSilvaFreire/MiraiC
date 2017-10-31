@@ -23,24 +23,25 @@ struct actionArgument {
 struct action {
 	long long start;
 	long long end;
-	ActionArgument arguments[];	
+	ActionArgument * arguments;	
 } typedef Action;
 
 Action currentAction;
 Action * lastActions;
 int totalActions;
+void printAction(Action a) {
+	printf("Action Start: %d" + a.start);
+	printf("Action End: %d" + a.start);
+}
 void writeLastActions() {
-	printf("Writing actions");
+	printf("Done actions\n");
 	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
 	if (logFile == NULL) {
 		logFile = fopen(LOG_FILE_NAME, "wb");
-		return;
 	}
-	int i;
-	for (i =0; i < totalActions; i++) {
-	    fwrite(lastActions, sizeof(Action), totalActions, logFile);
-	}
+	fwrite(lastActions, sizeof(Action), totalActions, logFile);
 	fclose(logFile);
+	printf("Done actions2\n");
 }
 
 void readLastActions() {
@@ -57,6 +58,14 @@ void readLastActions() {
 	totalActions = count / size;
 	fread(lastActions, size, totalActions, logFile);
 	fclose(logFile);
+	printf("Loaded %d actions: ", totalActions);
+	int i;
+	for (i=0; i < totalActions; i++) {
+		printf("Loading action %d\n", i);
+		Action a = *(lastActions +i);
+		printf("Loaded action %d\n", i);
+		printAction(a);
+	}
 }
 long long getCurrentTimestamp() {
     struct timeval te; 
@@ -85,6 +94,7 @@ void addToLog(Action action) {
 	lastActions[index] = action;
 }
 void finishAction() {
+	totalActions++;
 	currentAction.end = getCurrentTimestamp();
 	addToLog(currentAction);
 	writeLastActions();
@@ -111,16 +121,21 @@ char *COMMANDS_DESCRIPTIONS[TOTAL_COMMANDS] = {
         "Abre uma porta secreta para o paraiso"
 };
 
-
+void addFloatArgument(float i) {
+}
+void addIntArgument(int i) {
+}
 int readInteger() {
     int i;
     scanf("%d", &i);
+    addIntArgument(i);
     return i;
 }
 
 float readFloat() {
     float i;
     scanf("%f", &i);
+    addFloatArgument(i);
     return i;
 }
 
