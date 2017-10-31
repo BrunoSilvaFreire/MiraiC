@@ -13,7 +13,7 @@
 #define PRICE_OF_FILLING_AREA_COMMAND "precoPreenchimentoMaterialArea"
 #define PRICE_OF_FILLING_VOLUME_COMMAND "precoPreenchimentoMaterialVolume"
 #define CHILL_COMMAND "desestressar"
-
+#define LOG_FILE_NAME "log.mirai"
 
 struct actionArgument {
 	char * chars;
@@ -21,11 +21,14 @@ struct actionArgument {
 } typedef ActionArgument;
 
 struct action {
-	long long timestamp;
+	long long start;
+	long long end;
 	ActionArgument arguments[];	
 } typedef Action;
 
 Action currentAction;
+Action * lastActions;
+int totalActions;
 
 long long getCurrentTimestamp() {
     struct timeval te; 
@@ -34,10 +37,11 @@ long long getCurrentTimestamp() {
     // printf("milliseconds: %lld\n", milliseconds);
     return milliseconds;
 }
-
+void ensureCapacity() {
+}
 Action createNewAction() {
 	Action action = *((Action *) malloc(sizeof(Action)));
-	action.timestamp = getCurrentTimestamp();
+	action.start = getCurrentTimestamp();
 	return action;
 }
 
@@ -45,9 +49,14 @@ void startNewAction() {
 	currentAction = createNewAction();
 }
 
-
+void addToLog(Action action) {
+	int newSize = totalActions +1;
+	realloc(lastActions, sizeof(Action) * newSize);
+	lastActions[newSize-1] = action;
+}
 void finishAction() {
-	//TODO: save everything
+	currentAction.end = getCurrentTimestamp();
+	addToLog(currentAction);
 }
 
 char *AVAILABLE_COMMANDS[TOTAL_COMMANDS] = {
@@ -106,7 +115,7 @@ void printAvailableCommands() {
 
 
 void helloCommand() {
-    printf("Ola! ^_^");
+    printf("Ola! ^_^\n");
 }
 
 void areaOfSquareCommand() {
@@ -186,9 +195,32 @@ void executeCommand(int cmd) {
             printAvailableCommands();
     }
 }
-
-
+void writeLastActions() {
+	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
+	if (logFile == NULL) {
+		logFile = fopen(LOG_FILE_NAME, "wb");
+		return;
+	}
+	fwrite(lastActions, sizeof(Action), totalActions, logFile);
+}
+void readLastActions() {
+	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
+	if (logFile == NULL) {
+		logFile = fopen(LOG_FILE_NAME, "wb");
+		return;
+	}
+	int count;
+	while(fgetc(logFile) != EOF) {
+		count++;
+	}
+	
+	int size = sizeof(Action);
+	totalActions = count / size;
+	printf("Total bytes = %d, size = %d, total actions = %d\n", count, size, totalActions);
+	fread(lastActions, size, totalActions, logFile);
+}
 int main() {
+	readLastActions();
     printf("Ola, eu sou a mirai! Eu sou um robo feito para facilitar a sua vida :D\n");
     printf("Eu venho com varios comandos de utilidade que voce pode utilizar, entre eles:\n");
     printf("Digite o numero de um comando para a execucao! :)\n");
