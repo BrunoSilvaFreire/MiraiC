@@ -29,7 +29,35 @@ struct action {
 Action currentAction;
 Action * lastActions;
 int totalActions;
+void writeLastActions() {
+	printf("Writing actions");
+	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
+	if (logFile == NULL) {
+		logFile = fopen(LOG_FILE_NAME, "wb");
+		return;
+	}
+	int i;
+	for (i =0; i < totalActions; i++) {
+	    fwrite(lastActions, sizeof(Action), totalActions, logFile);
+	}
+	fclose(logFile);
+}
 
+void readLastActions() {
+	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
+	if (logFile == NULL) {
+		logFile = fopen(LOG_FILE_NAME, "wb");
+		return;
+	}
+	int count;
+	while(fgetc(logFile) != EOF) {
+		count++;
+	}
+	int size = sizeof(Action);
+	totalActions = count / size;
+	fread(lastActions, size, totalActions, logFile);
+	fclose(logFile);
+}
 long long getCurrentTimestamp() {
     struct timeval te; 
     gettimeofday(&te, NULL); // get current time
@@ -51,12 +79,15 @@ void startNewAction() {
 
 void addToLog(Action action) {
 	int newSize = totalActions +1;
-	realloc(lastActions, sizeof(Action) * newSize);
-	lastActions[newSize-1] = action;
+	int bytes = sizeof(Action) * newSize;
+	lastActions = realloc(lastActions, bytes);
+	int index = newSize-1;
+	lastActions[index] = action;
 }
 void finishAction() {
 	currentAction.end = getCurrentTimestamp();
 	addToLog(currentAction);
+	writeLastActions();
 }
 
 char *AVAILABLE_COMMANDS[TOTAL_COMMANDS] = {
@@ -195,30 +226,7 @@ void executeCommand(int cmd) {
             printAvailableCommands();
     }
 }
-void writeLastActions() {
-	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
-	if (logFile == NULL) {
-		logFile = fopen(LOG_FILE_NAME, "wb");
-		return;
-	}
-	fwrite(lastActions, sizeof(Action), totalActions, logFile);
-}
-void readLastActions() {
-	FILE * logFile = fopen(LOG_FILE_NAME, "rt+");
-	if (logFile == NULL) {
-		logFile = fopen(LOG_FILE_NAME, "wb");
-		return;
-	}
-	int count;
-	while(fgetc(logFile) != EOF) {
-		count++;
-	}
-	
-	int size = sizeof(Action);
-	totalActions = count / size;
-	printf("Total bytes = %d, size = %d, total actions = %d\n", count, size, totalActions);
-	fread(lastActions, size, totalActions, logFile);
-}
+
 int main() {
 	readLastActions();
     printf("Ola, eu sou a mirai! Eu sou um robo feito para facilitar a sua vida :D\n");
